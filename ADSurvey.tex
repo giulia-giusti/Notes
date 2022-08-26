@@ -67,10 +67,10 @@ Let's summarize the pros and cons of numerical differentiation with the followin
 \hline
  Pros & Cons\\
 \hline
-In optimization, symbolic derivatives can & No efficient runtime calculation of derivative values \\
-give valuable insight into the structure of & because symbolic expression can get exponentially\\ 
-the problem domain and produce analytical & larger than the expression whose derivative they \\
- solution of extrema that can eliminate the & represent.\\ 
+In optimization, symbolic derivatives can & No efficient runtime calculation of derivative  \\
+give valuable insight into the structure of & values because symbolic expression can get \\ 
+the problem domain and produce analytical & exponentially larger than the expression   \\
+ solution of extrema that can eliminate the & whose derivative they represent.\\ 
 need for derivative calculation altogether.  & \\ \hline
 \end{tabular}
 \end{center}
@@ -78,3 +78,11 @@ need for derivative calculation altogether.  & \\ \hline
 \paragraph{Automatic differentiation Solution} Automatic differentiation tries to solve the efficiency problem of Symbolic Differentiation. When we are concerned with the accurate numerical evaluation of derivatives and not so much with their actual symbolic form, it is in principle possible to significantly simplify computations by storing only the values of intermediate sub-expressions in memory. Moreover, for futher efficiency, we can interleave as much as possible the differentiation and simplification steps. This interleaving idea forms the basis of AD and provides an account of its simplest form: \textit{apply symbolic differentiation at the elementary operation level and keep intermediate numerical results, in lockstep with the evolution of the main function.}
 
 \subsection{AD and Its Main Modes}
+AD can be thought as performing a non-standard interpretation of a computer program where this interpretation involves augmenting the standard computation with the calculation of various derivatives. All numerical computations are ultimately compositions of a finite set of elementary operations for which derivatives are known and combining the derivatives of the constituent operations through the chain rule gives the derivative of the overall composition.
+
+\paragraph{Example} Let us consider the function $f(x_1,x_2)= ln(x_1)+ x_1 \cdot x_2 -sin(x_2)$. The computational graph of this function is the following
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.9]{img/compGraph}
+\end{figure}

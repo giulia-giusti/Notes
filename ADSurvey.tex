@@ -5,7 +5,7 @@ very recently, the fields of machine learning and AD have largely been unaware o
 \subsection{Introduction}
 Methods for the computation of derivatives in computer programs can be classified into four categories:
 \begin{center}
-\begin{tabular}{ |c|l|l| } 
+\begin{tabular}{|c|l|l|} 
 \hline
  Method & Pros & Cons\\
 \hline
@@ -35,8 +35,8 @@ In machine learning, a specialized counterpart of AD known as the backpropagatio
 Without proper introduction, one might assume that AD is either a type of numerical or symbolic differentiation. Confusion can arise because AD does in fact provide numerical values of derivatives (as opposed to derivative expressions) and it does so by using symbolic rules of differentiation (but keeping track of derivative values as opposed to the resulting expressions), giving it a two-sided nature that is partly symbolic and partly numerical.
 
 \subsubsection{AD Is Not Numerical Differentiation}
-Numerical differentiation is the finite difference approximation of derivatives using values of the original function evaluated at some sample points. In its simplest form, it is based on the limit definition of a derivative. For example, for a multivariate function $f:\mathbb{R}^n\rightarrow \mathbb{R}$ one can approximate the gradient $\nabla f = (\frac{\delta f}{\delta x_1},...,\frac{\delta f}{\delta x_n})$ using
-$$ \frac{\delta f (x)}{\delta x_i} \approx \frac{f(x+he_i)-f(x)}{h} $$
+Numerical differentiation is the finite difference approximation of derivatives using values of the original function evaluated at some sample points. In its simplest form, it is based on the limit definition of a derivative. For example, for a multivariate function $f:\mathbb{R}^n\rightarrow \mathbb{R}$ one can approximate the gradient $\nabla f = (\frac{\partial f}{\partial x_1},...,\frac{\partial f}{\partial x_n})$ using
+$$ \frac{\partial f (x)}{\partial x_i} \approx \frac{f(x+he_i)-f(x)}{h} $$
 where $e_i$ is the i-th unit vector (it is used to modify only the i-th direction of the point x) and $h>0$ is a small step size.
 
 Let's summarize the pros and cons of numerical differentiation with the following table:
@@ -80,9 +80,37 @@ need for derivative calculation altogether.  & \\ \hline
 \subsection{AD and Its Main Modes}
 AD can be thought as performing a non-standard interpretation of a computer program where this interpretation involves augmenting the standard computation with the calculation of various derivatives. All numerical computations are ultimately compositions of a finite set of elementary operations for which derivatives are known and combining the derivatives of the constituent operations through the chain rule gives the derivative of the overall composition.
 
+Given a function $f: \mathbb{R}^n \rightarrow \mathbb{R}^m$, an \emph{evolution trace} is constructed using intermediate variables $v_i$ such that
+\begin{itemize}
+	\item variables $v_{i-n}=x_i$, $i=1,...,n$ are the input variables,
+	\item variables $v_{i} \mbox{ } i$, $i=1,...,l$ are the working (intermediate) variables, and
+	\item variables $y_{m-i}=v_{l-i}$, $i=m-1,...,0$ are the output variables.
+\end{itemize}
+
 \paragraph{Example} Let us consider the function $f(x_1,x_2)= ln(x_1)+ x_1 \cdot x_2 -sin(x_2)$. The computational graph of this function is the following
 
 \begin{figure}[h!]
 	\centering
 	\includegraphics[scale=0.9]{img/compGraph}
+	\caption{Computational graph of the function $f(x_1,x_2)= ln(x_1)+ x_1 \cdot x_2 -sin(x_2)$}
+	\label{compGraph}
 \end{figure}
+\noindent This graph is useful for visualizing dependency relationships between intermediate variables. We will see in the next sections the evolution traces for forward mode and reverse mode related to this example.
+
+\vspace*{4mm}
+An important point to note here is that AD can differentiate not only closed-form expressions in the classical sense, but also algorithm making use of control flow such as branching, loops, recursion, and procedure calls, giving it an important advantage over symbolic differentiation which severely limits such expressivity. This is thanks to the fact that any numeric code will eventually result in a numeric evaluation trace with particular values of the input, intermediate, and output values, which are the only things one needs to know for computing derivatives using chain rule composition, regardless of the specific control flow path that was taken during execution.
+
+\subsubsection{Forward Mode}
+AD in forward accumulation mode is the conceptually most simple type.
+
+\paragraph{Example}
+Let us consider the evalutation trace of the function $f(x_1,x_2)= ln(x_1)+ x_1 \cdot x_2 -sin(x_2)$ give on the left-hand side in Figure~\ref{evalTrace} and in graph form in Figure~\ref{compGraph}. In order to compute the derivative of $f$ with respect to $x_1$, we start by associating with each intermediate variable $v_i$ a derivative $\dot{v_i}=\frac{\partial v_i}{\partial x_1}$. Then applying the chain rule to each elementary operation in the forward primal trace, we generate the corrisponding tangent derivative trace, given on the right-hand side in Figure~\ref{evalTrace}. Evaluating the primals $v_i$ in lockstep with their corrisponding tangent $\dot{v_i}$ gives us the required derivative in the final variable $\dot{v_5}=\frac{\partial y}{\partial x_1}$.
+
+\begin{figure}[h!]
+	\centering \includegraphics[scale=0.47]{img/evalTrace}
+	\caption{Forward mode AD example, with $y=f(x_1,x_2)= ln(x_1)+ x_1 \cdot x_2 -sin(x_2)$ evaluated at $(x_1, x_2)=(2,5)$ and setting $\dot{x_1}=1$ to compute $\frac{\partial y}{\partial x_1}$.}
+	\label{evalTrace}
+\end{figure}
+
+\subsubsection{Reverse Mode}
+AD in the reverse accumulation mode corresponds to a generalized backpropagation algorithm, in that it propagates derivatives backward from a given output. This is done by complementing each intermediate variable $v_i$ with an adjoint 

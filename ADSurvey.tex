@@ -113,4 +113,20 @@ Let us consider the evalutation trace of the function $f(x_1,x_2)= ln(x_1)+ x_1 
 \end{figure}
 
 \subsubsection{Reverse Mode}
-AD in the reverse accumulation mode corresponds to a generalized backpropagation algorithm, in that it propagates derivatives backward from a given output. This is done by complementing each intermediate variable $v_i$ with an adjoint 
+AD in the reverse accumulation mode corresponds to a generalized backpropagation algorithm, in that it propagates derivatives backward from a given output. This is done by complementing each intermediate variable $v_i$ with an adjoint $\overline{v}_i=\frac{\partial y_j}{\partial v_i}$ which represents the sensitivity of a considered output $y_j$ with respect to changes in $v_i$. In the case of backpropagation, $y$ would be a scalar corresponding to the error $E$.
+
+In reverse mode AD, derivatives are computed in the second phase of a two-phase process. In the first phase, the original function code is run forward, populating intermediate variables $v_i$ and recording the dependencies in the computational graph through a book-keeping procedure. In the second phase, derivatives are calculated by propagating adjoints
+$\overline{v}_i$ in reverse, from the outputs to the inputs.
+
+\paragraph{Backpropagation Algorithm}
+After performing the forward pass through the network, we need to calculate the loss function which is used to calculate the distance between the predicted value and the actual value. Backpropagation aims to minimize the cost function by adjusting network’s weights and biases. The level of adjustment is determined by the gradients of the loss function with respect to those parameters. Compute those gradients happens using a technique called \emph{chain rule}.
+
+\paragraph{Example}
+Returning to the example $y=f(x_1,x_2)= ln(x_1)+ x_1 \cdot x_2 -sin(x_2)$, in Figure~\ref{revMode}  we see the adjoint statements on the right-hand side, corresponding to each original elementary operation on the left-hand side.
+
+\begin{figure}[h!]
+	\centering \includegraphics[scale=0.47]{img/revMode}
+	\caption{}
+	\label{revMode}
+\end{figure}
+

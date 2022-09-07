@@ -126,7 +126,65 @@ Returning to the example $y=f(x_1,x_2)= ln(x_1)+ x_1 \cdot x_2 -sin(x_2)$, in Fi
 
 \begin{figure}[h!]
 	\centering \includegraphics[scale=0.47]{img/revMode}
-	\caption{}
+	\caption{Reverse mode AD example with $y=f(x_1,x_2)= ln(x_1)+ x_1 \cdot x_2 -sin(x_2)$ evaluated at $(x_1,x_2)=(2,5)$. After the forward evaluation of the primals on the left, the adjoint operations on the right are evaluated in reverse. Note that both $\overline{x}_1=\frac{\partial y}{\partial x_1}$ and $\overline{x}_2=\frac{\partial y}{\partial x_2}$ are computed in the same reverse pass, starting from the adjoint  $\overline{v}_5=\overline{y}=\frac{\partial y}{\partial y}=1$.}
 	\label{revMode}
 \end{figure}
+
+In simple terms, we are interested in computing the contribution $\overline{v}_i=\frac{\partial y_j}{\partial v_i}$ of the change in each variable $v_i$ to the change in the output $y$. Taking the variable $v_0$ as an example, we see in Figure~\ref{compGraph} that the only way it can affect $y$ is through affecting $v_2$ and $v_3$ , so its contribution to the change in $y$ is given by
+$$ 
+	\frac{\partial y}{\partial v_0} = \frac{\partial y}{\partial v_2} \frac{\partial v_2}{\partial v_0} +\frac{\partial y}{\partial v_3} \frac{\partial 		v_3}{\partial v_0}
+$$
+\noindent where $\overline{v}_2=\frac{\partial y}{\partial v_2}$ and  $\overline{v}_3=\frac{\partial y}{\partial v_3}$. In Figure~\ref{revMode} , this contribution is computed in two incremental steps
+$$
+	\overline{v}_0=\overline{v}_3 \frac{\partial v_3}{\partial v_0} \quad \quad\quad\quad\quad \overline{v}_0= \overline{v}_0 + \overline{v}_2 \frac{\partial 		v_2}{\partial v_0}
+$$
+lined up with the lines in the forward trace from which these expressions originate.
+
+After the forward pass on the left-hand side, we run the reverse pass of the adjoints on the right-hand side, starting with $\overline{v}_5=\overline{y}=\frac{\partial y}{\partial y}=1$. In the end we get the derivatives $\overline{x}_1=\frac{\partial y}{\partial x_1}$ and $\overline{x}_2=\frac{\partial y}{\partial x_2}$ in just one reverse pass.
+
+\paragraph{Forward Mode Advantage}
+An important advantage of the reverse mode is that it is significantly less costly to evaluate (in terms of operation count) than the forward mode for functions with a large number of inputs. In the extreme case of $f: \mathbb{R}^n \rightarrow \mathbb{R}$, only one application of the reverse mode is sufficient to compute the full gradient $\nabla f = \bigg( \frac{\partial y}{\partial x_1},..., \frac{\partial y}{\partial x_n}\bigg)$, compered with the $n$ passes of the forward mode needed for populating the same. Because machine learning
+practice principally involves the gradient of a scalar-valued objective with respect to a large number of parameters, this establishes the reverse mode, as opposed to the forward mode, as the mainstay technique in the form of the backpropagation algorithm.
+
+\subsection{AD and Machine Learning}
+Areas where AD has seen use include optimization, neural networks, computer vision, natural language processing, and probabilistic inference.
+
+\subsubsection{Gradient-Based Optimization}
+Gradient-based optimization is one of the pillars of machine learning. Given an objective function $f: \mathbb{R}^n \rightarrow \mathbb{R}$, classical gradient descent has the goal of finding (local) minima $\mathbf{w}^* = argmin_{\mathbf{w}} f(\mathbf{w})$ via updates of the form $\Delta  \mathbf{w} = -\eta \nabla f$ where $\eta >0$ is a step size (known as \emph{learning rate}). Gradient-based methods make use of the fact that $f$ decreases steepest if one goes in the direction of the negative gradient. The convergence rate of gradient-based methods is usually improved by adaptive step-size techniques that adjust the step size $\eta$ on every iteration. As we have seen, for large $n$, reverse mode AD provides a highly efficient method for computing gradients.
+
+\subsubsection{Neural Networks, Deep Learning, Differentiable Programming}
+Training of a neural network is an optimization problem with respect to its set of weights, which can in principle be addressed by using any method ranging from evolutionary algorithms to gradient-based methods  or the mainstay stochastic gradient descent and its many variants.
+
+As we have seen, the backpropagation algorithm is only a special case of AD: \textit{by applying reverse mode AD to an objective function evaluating a network’s error as a function of its weights, we can readily compute the partial derivatives needed for performing weight updates}.
+
+In mainstream frameworks including Theano, TensorFlow, Caffe, and CNTK the user first constructs a model as a computational graph using a domain-specific mini language, which then gets interpreted by the framework during execution. This approach has the advantage of enabling optimizations of the computational graph structure, but the disadvantages of having limited and unintuitive control flow and being difficult to debug. In contrast, the lineage of recent frameworks led by autograd, Chainer, and PyTorch provide truly general-purpose reverse mode AD,
+where the user directly uses the host programming language to define the model as a regular program of the forward computation. This eliminates the need for an interpreter, allows arbitrary control flow statements, and makes debugging simple and intuitive.
+
+Simultaneously with the ongoing adoption of general-purpose AD in machine learning, we are witnessing a modeling-centric terminology emerge within the deep learning community. The terms \emph{define-and-run} and \emph{static computational graph} refer to Theano-like systems where a model is constructed, before execution, as a computational graph structure, which later gets executed with different inputs while remaining fixed. In contrast, the terms \emph{define-by-run} and \emph{dynamic computational graph} refer to the general-purpose AD capability available in newer PyTorch-like systems where a model is a regular program in the host programming language, whose execution dynamically constructs a computational graph on-the-fly that can freely change in each iteration.
+
+\emph{Differentiable Programming} is another emerging term referring to the realization that deep learning practice essentially amounts to writing program templates of potential solutions to a problem, which are constructed as differentiable directed graphs assembled from functional blocks whose parameters are learned from examples using gradient-based optimization. Expressed in this paradigm, neural networks are just a class of parameterized
+differentiable programs composed of building blocks such as feed-forward, convolutional, and recurrent elements.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

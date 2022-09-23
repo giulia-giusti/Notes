@@ -131,3 +131,18 @@ of operations. So both phases are linear in $|G|$, giving a total cost of $O(|G|
 forward mode, a single evaluation now already gives us the whole gradient, independently of the number of inputs!
 
 \subsubsection{Symbolic Backpropagation and the Compositionality Issue}
+The symbolic methodology we saw for forward mode AD may be applied to the reverse mode too: given a computational graph $G$ with $n$ inputs and one output, one may produce a computational graph $\mathbf{bp}(G)$ with $n + 1$ inputs and $1 + n$ outputs such that, for all $\mathbf{r} = r_1 , \dots , r_n \in \mathbb{R}$, the forward evaluation of $\mathbf{bp}(G)(\mathbf{r}, 1)$ has output $(\llbracket G \rrbracket(\mathbf{r} ), \nabla\llbracket G \rrbracket(\mathbf{r} ))$. Moreover, $\mathbf{bp}(G) = O(|G|)$.
+
+\paragraph{Example} Let us look at an example, shown in Figure~\ref{compGraph2SBM}. First of all, observe that $\mathbf{bp}_{x_1, x_2, a} (G)$ contains a copy of $G$, marked in blue. This corresponds to the forward phase. The nodes marked in red correspond to the backward phase.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.45]{img/compGraph2SBM}
+	\caption{The computational graph $\mathbf{bp}_{x_1, x_2, a} (G)$ where $G$ is in Figure~\ref{compGraph2}, and its corresponding 			term}
+	\label{compGraph2SBM}
+\end{figure}
+
+Note that the the forward evaluation of $\mathbf{bp}_{x_1, x_2, a} (G)$ with $x_1 := 5, x_2 := 2$ and $a := 1$ matches exactly the steps of the backprop algorithm.
+
+\paragraph{Compositionality Issue}
+Rather than examining the details of the deﬁnition of $\mathbf{bp}$, let us observe at once that, from the standpoint of programming languages, it suﬀers from a serious defect: it is not compositional.
